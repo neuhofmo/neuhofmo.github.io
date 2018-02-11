@@ -16,10 +16,7 @@
 title: Data and stuff
 email: neuhofmo@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
- This blog is going to be about data science, python, computational biology 
- and occasionally other topics that made me excited for at least a moment. 
- As you can understand, this blog is dedicated to the things that excite me most 
- (at least professionally; otherwise it would be 100% about dogs).
+Data science, python, computational biology and definitely not enough dogs.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: NeuhofMoran
