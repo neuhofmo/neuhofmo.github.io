@@ -26,6 +26,9 @@ twitter_username: NeuhofMoran
 github_username: neuhofmo
 linkedin_username: moranneuhof
 
+
+show_excerpts: true
+
 # Google Analytics
 google_analytics: UA-113901221-1
 
@@ -35,6 +38,10 @@ theme: minima
 # theme: jekyll-theme-midnight
 plugins:
   - jekyll-feed
+  - jekyll-seo-tag
+
+minima:
+  date_format: "%b %-d, %Y"
 
 timezone: Asia/Jerusalem
 # show_downloads: false
