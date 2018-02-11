@@ -4,5 +4,4 @@
 # See: https://jekyllrb.com/docs/themes/#overriding-theme-defaults
 layout: home
 ---
-## Welcome to my website, {{ site.title }}
 
