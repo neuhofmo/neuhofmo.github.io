@@ -27,13 +27,13 @@ github_username:  neuhofmo
 
 # Build settings
 markdown: kramdown
-# theme: minima
-theme: jekyll-theme-midnight
+theme: minima
+# theme: jekyll-theme-midnight
 plugins:
   - jekyll-feed
 
 timezone: Asia/Jerusalem
-show_downloads: false
+# show_downloads: false
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
