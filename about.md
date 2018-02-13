@@ -7,7 +7,7 @@ permalink: /about/
 # About Me
 I am a data scientist and a biologist. I am currently doing my PhD at the [Rechavi Lab](http://www.odedrechavilab.com/) at Tel Aviv University.
 
-![Moran]({{ "/assets/Moran_profile_2016.jpg" | absolute_url }} =100x100)
+![Moran]({{ "/assets/Moran_profile_2016_small.jpg" | absolute_url }})
 
 # This Blog
 This blog will be about things that interest me, and hopefully about things that are of interest to other people.
