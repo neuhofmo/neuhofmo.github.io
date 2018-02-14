@@ -6,9 +6,7 @@ categories: python statistics pandas
 permalink: /chi-square-and-post-hoc-in-python/
 ---
 
-# \\( \chi^2 \\) and post-hoc tests in Python - the easy way
-
-
+# Chi-square and post-hoc tests in Python - the easy way
 
 
 
@@ -233,17 +231,17 @@ Then, by simply running `chisq_and_posthoc_corrected(df)`, we would get the foll
 
 
 
-We can see that while all patients differ from the control group significantly, some of them also differ from each other. 
+We can see that while all patients differ from the control group significantly, some of them also differ from each other.   
 
+​    
 
-
-###In conclusion
+### In conclusion 
 
 Python has very intuitive packages for dealing with chi-square tests and multiple corrections. Here I provide my suggestion for performing a valid chi-square test on large dataframes, using an example dataset based on a real experiment. I also wrapped some of the code into a [module](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py) and a [Jupyter notebook](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chi_square_test_and_post_hoc.ipynb). 
 
 I hope this post gives you either some intuition to the chi-square test in python or at least an easy-to-use implementation of the chi-square test for your data.
 
-
+​    
 
 ----
 
