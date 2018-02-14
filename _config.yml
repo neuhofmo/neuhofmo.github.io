@@ -29,8 +29,8 @@ show_excerpts: true
 google_analytics: UA-113901221-1
 
 # Build settings
-# markdown: kramdown
-markdown: redcarpet
+markdown: kramdown
+# markdown: redcarpet
 theme: minima
 # theme: jekyll-theme-midnight
 plugins:

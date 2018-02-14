@@ -6,7 +6,9 @@ categories: python statistics pandas
 permalink: /chi-square-and-post-hoc-in-python/
 ---
 
-## $\chi^2$ and post-hoc tests in Python - the easy way
+# \\( \chi^2 \\) and post-hoc tests in Python - the easy way
+
+
 
 
 
