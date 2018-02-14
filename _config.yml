@@ -13,7 +13,7 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Data and stuff
+title: Data Anecdotes
 email: neuhofmo@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
  Data science, python, computational biology and definitely not enough dogs.
@@ -23,7 +23,6 @@ twitter_username: NeuhofMoran
 github_username: neuhofmo
 linkedin_username: moranneuhof
 
-
 show_excerpts: true
 
 # Google Analytics
@@ -31,6 +30,7 @@ google_analytics: UA-113901221-1
 
 # Build settings
 markdown: kramdown
+# markdown: redcarpet
 theme: minima
 # theme: jekyll-theme-midnight
 plugins:
