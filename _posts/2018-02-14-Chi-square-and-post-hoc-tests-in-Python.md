@@ -6,13 +6,11 @@ categories: python statistics pandas
 permalink: /chi-square-and-post-hoc-in-python/
 ---
 
-## Chi-square and post-hoc tests in Python - the easy way  
+This post deals with easily performing chi-square test in python straight from an .xlsx file, including post-hoc tests and multiple comparisons correction.
 
+#### TL;DR 
 
-
-### TL;DR
-
-If you want to run $$\chi^2$$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
+If you want to run $$\chi^2​$$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
 
 
 
