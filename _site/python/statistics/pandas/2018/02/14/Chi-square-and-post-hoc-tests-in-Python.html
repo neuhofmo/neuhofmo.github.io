@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>Chi-square (and post-hoc) tests in Python | Data Anecdotes</title>
+<meta property="og:title" content="Chi-square (and post-hoc) tests in Python" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="$\chi^2$ and post-hoc tests in Python - the easy way" />
+<meta property="og:description" content="$\chi^2$ and post-hoc tests in Python - the easy way" />
+<link rel="canonical" href="http://localhost:4000/python/statistics/pandas/2018/02/14/Chi-square-and-post-hoc-tests-in-Python.html" />
+<meta property="og:url" content="http://localhost:4000/python/statistics/pandas/2018/02/14/Chi-square-and-post-hoc-tests-in-Python.html" />
+<meta property="og:site_name" content="Data Anecdotes" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2018-02-14T12:25:55+02:00" />
+<script type="application/ld+json">
+{"name":null,"description":"$\\chi^2$ and post-hoc tests in Python - the easy way","author":null,"@type":"BlogPosting","url":"http://localhost:4000/python/statistics/pandas/2018/02/14/Chi-square-and-post-hoc-tests-in-Python.html","publisher":null,"image":null,"headline":"Chi-square (and post-hoc) tests in Python","dateModified":"2018-02-14T12:25:55+02:00","datePublished":"2018-02-14T12:25:55+02:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/statistics/pandas/2018/02/14/Chi-square-and-post-hoc-tests-in-Python.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Data Anecdotes" />
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" rel="author" href="/">Data Anecdotes</a>
+
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Chi-square (and post-hoc) tests in Python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2018-02-14T12:25:55+02:00" itemprop="datePublished">
+        
+        Feb 14, 2018
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="chi2-and-post-hoc-tests-in-python---the-easy-way">$\chi^2$ and post-hoc tests in Python - the easy way</h2>
+
+<h3 id="tldr">TL;DR</h3>
+
+<p>If you want to run $\chi^2$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function <code class="highlighter-rouge">chisq_and_posthoc_corrected(df)</code> <a href="https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py">available in this repository</a>. Good luck!</p>
+
+<h3 id="chi-square-and-post-hoc-tests-in-python">Chi-square and post-hoc tests in Python</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Chi-squared_test">Chi-squared test</a>, or in its more formal notation,  $\chi^2$ test, is widely used in research when there’s a need to compare the number of observations between different experimental conditions. It is a pretty standard test, and pretty easy to perform using python, but when dealing with multiple groups and multiple conditions (i.e. more than 2 columns and 2 rows) these contingency tables (yet another name for chi-square test) become a little harder to implement.</p>
+
+<p>In this post I will explain the ideas behind the multiple chi-square test and offer implemented functions that only require a <a href="https://pandas.pydata.org/">pandas</a> DataFrame to streamline chi-square test for multiple groups, post-hoc chi-square tests, multiple testing correction and a nice stacked bar-plot representation of the results.</p>
+
+<p>This post is inspired by <a href="https://twitter.com/ShirToubiana">Shir</a>, a PhD student at the Technion, and is based on the data she has collected. Since her results are still unpublished, I had to change the data a little bit and avoid details about the real purpose of her experiment, which doesn’t matter much for this demonstration (but is really cool nonetheless).</p>
+
+<h3 id="our-data">Our data</h3>
+
+<p>Let’s say we want to study the difference in the shape of certain cell types (let’s say liver cells) between patients suffering from a specific condition and people that do not suffer from that condition. For this purpose, we took tissue samples from four patients and from a few healthy persons (which we collectively call “Control”)*. We then took a look at the shape of their liver cells, and divided them to 3 different shapes: “normal”, “abnormal” (these cells don’t look so good, probably non-functional) and “bad” (these cells are really deformed).</p>
+
+<p>We counted how many time we saw each of the above conditions in our samples, and got the following results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Cell_line</th>
+      <th style="text-align: center">Normal</th>
+      <th style="text-align: center">Abnormal</th>
+      <th style="text-align: center">Bad</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><strong>Control</strong></td>
+      <td style="text-align: center">5126</td>
+      <td style="text-align: center">137</td>
+      <td style="text-align: center">5</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><strong>Patient1</strong></td>
+      <td style="text-align: center">1597</td>
+      <td style="text-align: center">20</td>
+      <td style="text-align: center">7</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><strong>Patient2</strong></td>
+      <td style="text-align: center">862</td>
+      <td style="text-align: center">12</td>
+      <td style="text-align: center">4</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><strong>Patient3</strong></td>
+      <td style="text-align: center">861</td>
+      <td style="text-align: center">22</td>
+      <td style="text-align: center">7</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><strong>Patient4</strong></td>
+      <td style="text-align: center">4546</td>
+      <td style="text-align: center">886</td>
+      <td style="text-align: center">142</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>From this table we can see that the “abnormal” and “bad” cells were observed even in healthy people. It makes sense - after all, it’s still biology, and cells vary within individuals. Thus, we are actually more interested to know whether these abnormalities are more <em>frequent</em> in our patients.</p>
+
+<p>More formally, we wanted to see if there’s any difference in the distribution of the three cell shapes between the healthy and sick.</p>
+
+<p>If you are familiar with the $\chi^2$ test**, it looks like it would be very useful in telling us if the distributions are different.</p>
+
+<hr />
+
+<p>*Since the patients differ from each other, we couldn’t group them into one “Patients” or “Cases” group, but had to compare them separately.</p>
+
+<p>**For this post, I assume you have some basic knowledge of what chi-square tests do and how they work. If you don’t, it may be a good idea to check out <a href="http://www.statisticshowto.com/probability-and-statistics/chi-square/">this post</a> or <a href="https://onlinecourses.science.psu.edu/statprogram/node/158">this post</a>, but don’t be afraid to start with <a href="https://www.khanacademy.org/math/statistics-probability/inference-categorical-data-chi-square-tests/chi-square-goodness-of-fit-tests/v/pearson-s-chi-square-test-goodness-of-fit">Khan Academy’s introduction video</a> to capture the intuition behind this test.</p>
+
+<h3 id="chi2-test-in-python">$\chi^2$ test in Python</h3>
+
+<p>What we want to do in this case is to compare the different groups and get a p-value that tells us whether these groups are actually different than each other.</p>
+
+<p>There are a few different implementations to chi-square test in python, but <a href="http://lagrange.univ-lyon1.fr/docs/scipy/0.17.1/generated/scipy.stats.chi2_contingency.html">scipy.stats.chi2_contingency</a> is the easiest to use. You may find some code examples using this module <a href="https://www.programcreek.com/python/example/100318/scipy.stats.chi2_contingency">here</a> and <a href="https://codereview.stackexchange.com/questions/96761/chi-square-independence-test-for-two-pandas-df-columns">here</a>, but the usage is pretty straightforward.</p>
+
+<p>First, let’s load our table into a pandas dataframe:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1<br data-jekyll-commonmark-ghpages="" />2<br data-jekyll-commonmark-ghpages="" />3<br data-jekyll-commonmark-ghpages="" />4<br data-jekyll-commonmark-ghpages="" /></pre></td><td class="code"><pre><span class="sb">``</span><span class="err">`</span><span class="n">python</span><br data-jekyll-commonmark-ghpages="" /><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span><br data-jekyll-commonmark-ghpages="" /><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s">'groups_sum_demo.xlsx'</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s">'Cell_line'</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" /><span class="sb">``</span><span class="err">`</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p>And then use the contingency table function to get a p-value:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1<br data-jekyll-commonmark-ghpages="" />2<br data-jekyll-commonmark-ghpages="" />3<br data-jekyll-commonmark-ghpages="" />4<br data-jekyll-commonmark-ghpages="" />5<br data-jekyll-commonmark-ghpages="" /></pre></td><td class="code"><pre><span class="sb">``</span><span class="err">`</span><span class="n">python</span><br data-jekyll-commonmark-ghpages="" /><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chi2_contingency</span><br data-jekyll-commonmark-ghpages="" /><span class="n">chi2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">chi2_contingency</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" /><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Chi2 result of the contingency table: {chi2}, p-value: {p}"</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" /><span class="sb">``</span><span class="err">`</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Which return the $\chi^2$ statistic, the p-value, Degrees of Freedom and the expected distribution of the categories. We are mostly interested in the p-value*.</p>
+
+<p>In this case, the p-value = 1.27e-232, which seems pretty significant. But in which direction? Are the patients different from the control? Are the patients different from each other?</p>
+
+<p>*If what I wrote here still doesn’t make enough sense, <a href="http://hamelg.blogspot.co.il/2015/11/python-for-data-analysis-part-25-chi.html">this post</a> explains chi-square in python pretty nicely, including code snippets and some background.</p>
+
+<h3 id="chi-square-post-hoc-tests">Chi Square post-hoc tests</h3>
+
+<p>In order to check the differences between each pair of groups, we would have to individually compare every pair separately (a valid post-hoc test for such comparisons). Acquiring a list of all possible pairs is pretty simple using the built-in <a href="https://docs.python.org/3/library/itertools.html">itertools.combinations</a>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># gathering all combinations for post-hoc chi2</span>
+<span class="n">all_combinations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Significance results:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">all_combinations</span><span class="p">:</span>
+    <span class="c"># subset df into a dataframe containing only the pair "comb"</span>
+    <span class="n">new_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="c"># running chi2 test</span>
+    <span class="n">chi2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">chi2_contingency</span><span class="p">(</span><span class="n">new_df</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Chi2 result for pair {comb}: {chi2}, p-value: {p}"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="avoiding-multiple-comparisons-bias">Avoiding multiple comparisons bias</h3>
+
+<p>In the previous step, we have calculated the p-value for each pair. However, since we have performed the test several times, we have to correct our results for <a href="https://en.wikipedia.org/wiki/Multiple_comparisons_problem">multiple comparisons</a>. One such way to do it to correct our p-values using <a href="https://en.wikipedia.org/wiki/False_discovery_rate">FDR correction</a>. Such correction is already available using <a href="http://www.statsmodels.org/dev/generated/statsmodels.sandbox.stats.multicomp.multipletests.html">statsmodels.sandbox.stats.multicomp.multipletests</a> which offers many other corrections (actually, the statsmodels and scipy moduls cover almost 100% of my statistics needs).</p>
+
+<p><code class="highlighter-rouge">multipletests</code> receives a list of p-values  (as well as other optional arguments), and returns the respective list of reject decision (reject/do not reject) as well as a list of the corrected p-values (it also returns additional values which are not relevant to our case).</p>
+
+<p>So instead of printing the p-values for each test like we did before, we can collect them in a list:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="c"># gathering all combinations for post-hoc chi2</span>
+<span class="n">all_combinations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">p_vals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">all_combinations</span><span class="p">:</span>
+    <span class="c"># subset df into a dataframe containing only the pair "comb"</span>
+    <span class="n">new_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="c"># running chi2 test</span>
+    <span class="n">chi2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">chi2_contingency</span><span class="p">(</span><span class="n">new_df</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">p_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>And then correct the list:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">statsmodels.sandbox.stats.multicomp</span> <span class="kn">import</span> <span class="n">multipletests</span>
+
+<span class="n">reject_list</span><span class="p">,</span> <span class="n">corrected_p_vals</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">'fdr_bh'</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>In order to demonstrate that the p-values were indeed corrected, we can print them in order:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span><span class="p">(</span><span class="s">"original p-value</span><span class="se">\t</span><span class="s">corrected p-value</span><span class="se">\t</span><span class="s">reject?"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">p_val</span><span class="p">,</span> <span class="n">corr_p_val</span><span class="p">,</span> <span class="n">reject</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">corrected_p_vals</span><span class="p">,</span> <span class="n">reject_list</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">p_val</span><span class="p">,</span> <span class="s">"</span><span class="se">\t</span><span class="s">"</span><span class="p">,</span> <span class="n">corr_p_val</span><span class="p">,</span> <span class="s">"</span><span class="se">\t</span><span class="s">"</span><span class="p">,</span> <span class="n">reject</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>And get the following results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>original p-value</th>
+      <th>corrected p-value</th>
+      <th>reject?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.000100825375712</td>
+      <td>0.000168042292854</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>0.00323083142242</td>
+      <td>0.0046154734606</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>8.43128799303e-05</td>
+      <td>0.000168042292854</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2.48244478974e-153</td>
+      <td>2.48244478974e-152</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>0.955635429992</td>
+      <td>0.955635429992</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>0.0342345357251</td>
+      <td>0.0427931696564</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2.68447965589e-62</td>
+      <td>1.34223982794e-61</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>0.158923855452</td>
+      <td>0.176582061613</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2.55242848911e-34</td>
+      <td>8.5080949637e-34</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>6.12967436168e-29</td>
+      <td>1.53241859042e-28</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Now we can easily tell which of our pairs differ significantly (assuming $\alpha = 0.05$; if you would like to use a different threshold, for example 0.01, you should use <code class="highlighter-rouge">multipletests(p_vals, method='fdr_bh', alpha=0.01)</code>).</p>
+
+<p>In order to make it even more intuitive, following the standard in biological publications I would like to add mark the significance with asterisks (according to the p-value).</p>
+
+<p>So for convenience, let’s define:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">get_asterisks_for_pval</span><span class="p">(</span><span class="n">p_val</span><span class="p">):</span>
+    <span class="s">"""Receives the p-value and returns asterisks string."""</span>
+    <span class="k">if</span> <span class="n">p_val</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+        <span class="n">p_text</span> <span class="o">=</span> <span class="s">"ns"</span>  <span class="c"># above threshold =&gt; not significant</span>
+    <span class="k">elif</span> <span class="n">p_val</span> <span class="o">&lt;</span> <span class="mf">1e-4</span><span class="p">:</span>  
+        <span class="n">p_text</span> <span class="o">=</span> <span class="s">'****'</span>
+    <span class="k">elif</span> <span class="n">p_val</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>
+        <span class="n">p_text</span> <span class="o">=</span> <span class="s">'***'</span>
+    <span class="k">elif</span> <span class="n">p_val</span> <span class="o">&lt;</span> <span class="mf">1e-2</span><span class="p">:</span>
+        <span class="n">p_text</span> <span class="o">=</span> <span class="s">'**'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p_text</span> <span class="o">=</span> <span class="s">'*'</span>
+    
+    <span class="k">return</span> <span class="n">p_text</span>
+</code></pre></div></div>
+
+<p>Which returns a string of asterisks for each p-value we provide.</p>
+
+<p>Then, we can actually combine our initial test, post-hoc tests and multiple comparisons correction into one function, which receives a pandas DataFrame object and prints out the results for the entire table, and then for each and every pair:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1<br data-jekyll-commonmark-ghpages="" />2<br data-jekyll-commonmark-ghpages="" />3<br data-jekyll-commonmark-ghpages="" />4<br data-jekyll-commonmark-ghpages="" />5<br data-jekyll-commonmark-ghpages="" />6<br data-jekyll-commonmark-ghpages="" />7<br data-jekyll-commonmark-ghpages="" />8<br data-jekyll-commonmark-ghpages="" />9<br data-jekyll-commonmark-ghpages="" />10<br data-jekyll-commonmark-ghpages="" />11<br data-jekyll-commonmark-ghpages="" />12<br data-jekyll-commonmark-ghpages="" />13<br data-jekyll-commonmark-ghpages="" />14<br data-jekyll-commonmark-ghpages="" />15<br data-jekyll-commonmark-ghpages="" />16<br data-jekyll-commonmark-ghpages="" />17<br data-jekyll-commonmark-ghpages="" />18<br data-jekyll-commonmark-ghpages="" />19<br data-jekyll-commonmark-ghpages="" />20<br data-jekyll-commonmark-ghpages="" />21<br data-jekyll-commonmark-ghpages="" />22<br data-jekyll-commonmark-ghpages="" />23<br data-jekyll-commonmark-ghpages="" />24<br data-jekyll-commonmark-ghpages="" /></pre></td><td class="code"><pre><span class="sb">``</span><span class="err">`</span><span class="n">python</span><br data-jekyll-commonmark-ghpages="" /><span class="k">def</span> <span class="nf">chisq_and_posthoc_corrected</span><span class="p">(</span><span class="n">df</span><span class="p">):</span><br data-jekyll-commonmark-ghpages="" />    <span class="s">"""Receives a dataframe and performs chi2 test and then post hoc.<br data-jekyll-commonmark-ghpages="" />    Prints the p-values and corrected p-values (after FDR correction)"""</span><br data-jekyll-commonmark-ghpages="" />    <span class="c"># start by running chi2 test on the matrix</span><br data-jekyll-commonmark-ghpages="" />    <span class="n">chi2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">chi2_contingency</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" />    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"Chi2 result of the contingency table: {chi2}, p-value: {p}"</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" />    <br data-jekyll-commonmark-ghpages="" />    <span class="c"># post-hoc</span><br data-jekyll-commonmark-ghpages="" />    <span class="n">all_combinations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c"># gathering all combinations for post-hoc chi2</span><br data-jekyll-commonmark-ghpages="" />    <span class="n">p_vals</span> <span class="o">=</span> <span class="p">[]</span><br data-jekyll-commonmark-ghpages="" />    <span class="k">print</span><span class="p">(</span><span class="s">"Significance results:"</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" />    <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">all_combinations</span><span class="p">:</span><br data-jekyll-commonmark-ghpages="" />        <span class="n">new_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">comb</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><br data-jekyll-commonmark-ghpages="" />        <span class="n">chi2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">chi2_contingency</span><span class="p">(</span><span class="n">new_df</span><span class="p">,</span> <span class="n">correction</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" />        <span class="n">p_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" />        <span class="c"># print(f"For {comb}: {p}")  # uncorrected</span><br data-jekyll-commonmark-ghpages="" /><br data-jekyll-commonmark-ghpages="" />    <span class="c"># checking significance</span><br data-jekyll-commonmark-ghpages="" />    <span class="c"># correction for multiple testing</span><br data-jekyll-commonmark-ghpages="" />    <span class="n">reject_list</span><span class="p">,</span> <span class="n">corrected_p_vals</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">'fdr_bh'</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span><br data-jekyll-commonmark-ghpages="" />    <span class="k">for</span> <span class="n">p_val</span><span class="p">,</span> <span class="n">corr_p_val</span><span class="p">,</span> <span class="n">reject</span><span class="p">,</span> <span class="n">comb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">corrected_p_vals</span><span class="p">,</span> <span class="n">reject_list</span><span class="p">,</span> <span class="n">all_combinations</span><span class="p">):</span><br data-jekyll-commonmark-ghpages="" />        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"{comb}: p_value: {p_val:5f}; corrected: {corr_p_val:5f} ({get_asterisks_for_pval(p_val)}) reject: {reject}"</span><span class="p">)</span><br data-jekyll-commonmark-ghpages="" /><span class="sb">``</span><span class="err">`</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Then, by simply running <code class="highlighter-rouge">chisq_and_posthoc_corrected(df)</code>, we would get the following output:</p>
+
+<blockquote>
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Chi2 result of the contingency table: 1095.406615116616, p-value: 3.761331610902334e-231
+Significance results:
+('Control', 'Patient1'): p_value: 0.000101; corrected: 0.000168 (***) reject: True
+('Control', 'Patient2'): p_value: 0.003231; corrected: 0.004615 (**) reject: True
+('Control', 'Patient3'): p_value: 0.000084; corrected: 0.000168 (****) reject: True
+('Control', 'Patient4'): p_value: 0.000000; corrected: 0.000000 (****) reject: True
+('Patient1', 'Patient2'): p_value: 0.955635; corrected: 0.955635 (ns) reject: False
+('Patient1', 'Patient3'): p_value: 0.034235; corrected: 0.042793 (*) reject: True
+('Patient1', 'Patient4'): p_value: 0.000000; corrected: 0.000000 (****) reject: True
+('Patient2', 'Patient3'): p_value: 0.158924; corrected: 0.176582 (ns) reject: False
+('Patient2', 'Patient4'): p_value: 0.000000; corrected: 0.000000 (****) reject: True
+('Patient3', 'Patient4'): p_value: 0.000000; corrected: 0.000000 (****) reject: True
+</code></pre></div>  </div>
+</blockquote>
+
+<p>We can see that while all patients differ from the control group significantly, some of them also differ from each other. This result might require further investigation, depending on the study; but ««&lt;FG<FDSFSD>&gt;\</FDSFSD></p>
+
+<h1 id="conclusions">Conclusions</h1>
+
+<p>The code presented here, as well as a more generalized module, is available in the <a href="https://github.com/neuhofmo/chisq_test_wrapper">chisq_test_wrapper repository</a>.</p>
+
+<h3 id="further-reading">Further reading:</h3>
+
+<ul>
+  <li>​</li>
+</ul>
+
+<h1 id="todo">TODO:</h1>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add link to post in notebook and upload it.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add implemented methods as a package</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add conclusions</li>
+</ul>
+
+
+  </div>
+
+  
+
+  <a class="u-url" href="/python/statistics/pandas/2018/02/14/Chi-square-and-post-hoc-tests-in-Python.html" hidden></a>
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Data Anecdotes</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">
+            
+              Data Anecdotes
+            
+            </li>
+            
+            <li><a class="u-email" href="mailto:neuhofmo@gmail.com">neuhofmo@gmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+  
+  
+  
+  <li><a href="https://github.com/neuhofmo"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">neuhofmo</span></a></li>
+  
+  <li><a href="https://www.linkedin.com/in/moranneuhof"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">moranneuhof</span></a></li>
+  
+  <li><a href="https://www.twitter.com/NeuhofMoran"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">NeuhofMoran</span></a></li>
+  
+  
+  
+</ul>
+
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Data science, python, computational biology and definitely not enough dogs.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+</html>
