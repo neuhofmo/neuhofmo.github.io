@@ -10,7 +10,7 @@ This post deals with easily performing chi-square test in python straight from a
 
 #### TL;DR 
 
-If you want to run $$\chi^2​$$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
+If you want to run $$\chi^2$$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
 
 
 
@@ -52,7 +52,7 @@ If you are familiar with the $$\chi^2$$ test**, it looks like it would be very u
 
 
 
-### $\chi^2$ test in Python 
+### Chi Square test in Python 
 
 What we want to do in this case is to compare the different groups and get a p-value that tells us whether these groups are actually different than each other. 
 

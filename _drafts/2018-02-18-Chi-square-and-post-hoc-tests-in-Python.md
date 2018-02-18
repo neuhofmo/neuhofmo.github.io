@@ -1,22 +1,22 @@
 ---
 layout: post
 title: Chi-square (and post-hoc) tests in Python
+date: 2018-02-14 14:00:00
 categories: python statistics pandas 
+permalink: /chi-square-and-post-hoc-in-python/
 ---
 
-## $\chi^2$ and post-hoc tests in Python - the easy way
+This post deals with easily performing chi-square test in python straight from an .xlsx file, including post-hoc tests and multiple comparisons correction.
 
+#### TL;DR 
 
-
-### TL;DR
-
-If you want to run $\chi^2$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
+If you want to run $$\chi^2$$ contingency test, with post-hoc and multiple comparisons correction, on a pandas DataFrame, just use the function `chisq_and_posthoc_corrected(df)` [available in this repository](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py). Good luck!
 
 
 
 ### Chi-square and post-hoc tests in Python 
 
-[Chi-squared test](https://en.wikipedia.org/wiki/Chi-squared_test), or in its more formal notation,  $\chi^2$ test, is widely used in research when there's a need to compare the number of observations between different experimental conditions. It is a pretty standard test, and pretty easy to perform using python, but when dealing with multiple groups and multiple conditions (i.e. more than 2 columns and 2 rows) these contingency tables (yet another name for chi-square test) become a little harder to implement.
+[Chi-squared test](https://en.wikipedia.org/wiki/Chi-squared_test), or in its more formal notation,  $$\chi^2$$ test, is widely used in research when there's a need to compare the number of observations between different experimental conditions. It is a pretty standard test, and pretty easy to perform using python, but when dealing with multiple groups and multiple conditions (i.e. more than 2 columns and 2 rows) these contingency tables (yet another name for chi-square test) become a little harder to implement.
 
 In this post I will explain the ideas behind the multiple chi-square test and offer implemented functions that only require a [pandas](https://pandas.pydata.org/) DataFrame to streamline chi-square test for multiple groups, post-hoc chi-square tests, multiple testing correction and a nice stacked bar-plot representation of the results.
 
@@ -42,7 +42,7 @@ From this table we can see that the "abnormal" and "bad" cells were observed eve
 
 More formally, we wanted to see if there's any difference in the distribution of the three cell shapes between the healthy and sick. 
 
-If you are familiar with the $\chi^2$ test**, it looks like it would be very useful in telling us if the distributions are different.
+If you are familiar with the $$\chi^2$$ test**, it looks like it would be very useful in telling us if the distributions are different.
 
 ----
 
@@ -52,7 +52,7 @@ If you are familiar with the $\chi^2$ test**, it looks like it would be very use
 
 
 
-### $\chi^2$ test in Python 
+### Chi Square test in Python 
 
 What we want to do in this case is to compare the different groups and get a p-value that tells us whether these groups are actually different than each other. 
 
@@ -60,18 +60,12 @@ There are a few different implementations to chi-square test in python, but [sci
 
 First, let's load our table into a pandas dataframe:
 
-{% highlight python linenos %}
-
 ```python
 import pandas as pd
 df = pd.read_excel('groups_sum_demo.xlsx', index_col='Cell_line')
 ```
 
-{% endhighlight %}
-
 And then use the contingency table function to get a p-value:
-
-{% highlight python linenos %}
 
 ```python
 from scipy.stats import chi2_contingency
@@ -79,9 +73,7 @@ chi2, p, dof, ex = chi2_contingency(df, correction=True)
 print(f"Chi2 result of the contingency table: {chi2}, p-value: {p}")
 ```
 
-{% endhighlight %}
-
-Which return the $\chi^2$ statistic, the p-value, Degrees of Freedom and the expected distribution of the categories. We are mostly interested in the p-value*.
+Which return the $$\chi^2$$ statistic, the p-value, Degrees of Freedom and the expected distribution of the categories. We are mostly interested in the p-value*.
 
 In this case, the p-value = 1.27e-232, which seems pretty significant. But in which direction? Are the patients different from the control? Are the patients different from each other? 
 
@@ -94,8 +86,6 @@ In this case, the p-value = 1.27e-232, which seems pretty significant. But in wh
 ### Chi Square post-hoc tests
 
 In order to check the differences between each pair of groups, we would have to individually compare every pair separately (a valid post-hoc test for such comparisons). Acquiring a list of all possible pairs is pretty simple using the built-in [itertools.combinations](https://docs.python.org/3/library/itertools.html):
-
-
 
 ```python
 # gathering all combinations for post-hoc chi2
@@ -113,7 +103,7 @@ for comb in all_combinations:
 
 ### Avoiding multiple comparisons bias
 
-In the previous step, we have calculated the p-value for each pair. However, since we have performed the test several times, we have to correct our results for [multiple comparisons](https://en.wikipedia.org/wiki/Multiple_comparisons_problem). One such way to do it to correct our p-values using [FDR correction](https://en.wikipedia.org/wiki/False_discovery_rate). Such correction is already available using [statsmodels.sandbox.stats.multicomp.multipletests](http://www.statsmodels.org/dev/generated/statsmodels.sandbox.stats.multicomp.multipletests.html) which offers many other corrections (actually, the statsmodels and scipy moduls cover almost 100% of my statistics needs).
+In the previous step, we have calculated the p-value for each pair. However, since we have performed the test several times, we have to correct our results for [multiple comparisons](https://en.wikipedia.org/wiki/Multiple_comparisons_problem). One such way to do it to correct our p-values using [FDR correction](https://en.wikipedia.org/wiki/False_discovery_rate). Such correction is already available using [statsmodels.sandbox.stats.multicomp.multipletests](http://www.statsmodels.org/dev/generated/statsmodels.sandbox.stats.multicomp.multipletests.html) which offers many other corrections (actually, the [statsmodels](http://www.statsmodels.org/stable/index.html) and [scipy](https://www.scipy.org/) modules cover almost 100% of my statistics needs).
 
 `multipletests` receives a list of p-values  (as well as other optional arguments), and returns the respective list of reject decision (reject/do not reject) as well as a list of the corrected p-values (it also returns additional values which are not relevant to our case).
 
@@ -164,7 +154,7 @@ original p-value|corrected p-value|reject?
 2.55242848911e-34 | 8.5080949637e-34 | True
 6.12967436168e-29 | 1.53241859042e-28 | True
 
-Now we can easily tell which of our pairs differ significantly (assuming $\alpha = 0.05$; if you would like to use a different threshold, for example 0.01, you should use `multipletests(p_vals, method='fdr_bh', alpha=0.01)`). 
+Now we can easily tell which of our pairs differ significantly (assuming $$\alpha = 0.05$$; if you would like to use a different threshold, for example 0.01, you should use `multipletests(p_vals, method='fdr_bh', alpha=0.01)`). 
 
 
 
@@ -193,8 +183,6 @@ Which returns a string of asterisks for each p-value we provide.
 
 Then, we can actually combine our initial test, post-hoc tests and multiple comparisons correction into one function, which receives a pandas DataFrame object and prints out the results for the entire table, and then for each and every pair:
 
-{% highlight python linenos %}
-
 ```python
 def chisq_and_posthoc_corrected(df):
     """Receives a dataframe and performs chi2 test and then post hoc.
@@ -220,7 +208,7 @@ def chisq_and_posthoc_corrected(df):
         print(f"{comb}: p_value: {p_val:5f}; corrected: {corr_p_val:5f} ({get_asterisks_for_pval(p_val)}) reject: {reject}")
 ```
 
-{% endhighlight %}
+
 
 Then, by simply running `chisq_and_posthoc_corrected(df)`, we would get the following output:
 
@@ -239,31 +227,20 @@ Then, by simply running `chisq_and_posthoc_corrected(df)`, we would get the foll
 > ('Patient3', 'Patient4'): p_value: 0.000000; corrected: 0.000000 (****) reject: True
 > ```
 
-We can see that while all patients differ from the control group significantly, some of them also differ from each other. This result might require further investigation, depending on the study; but <<<<<FG<FDSFSD>>\
 
 
+We can see that while all patients differ from the control group significantly, some of them also differ from each other.   
 
-# Conclusions
+​    
 
+### In conclusion 
 
+Python has very intuitive packages for dealing with chi-square tests and multiple corrections. Here I provide my suggestion for performing a valid chi-square test on large dataframes, using an example dataset based on a real experiment. I also wrapped some of the code into a [module](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chisq_test_wrapper.py) and a [Jupyter notebook](https://github.com/neuhofmo/chisq_test_wrapper/blob/master/chi_square_test_and_post_hoc.ipynb). 
 
+I hope this post gives you either some intuition to the chi-square test in python or at least an easy-to-use implementation of the chi-square test for your data.
 
+​    
 
-
+----
 
 The code presented here, as well as a more generalized module, is available in the [chisq_test_wrapper repository](https://github.com/neuhofmo/chisq_test_wrapper).
-
-
-
-### Further reading:
-
-- ​
-
-
-
-# TODO:
-
-- [ ] Add link to post in notebook and upload it.
-- [x] Add implemented methods as a package
-- [ ] Add conclusions
-
